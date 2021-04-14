@@ -1,0 +1,1 @@
+dtc -O dtb -o bbb-fdc-00A0.dtbo -b 0 -@ bbb-fdc-00A0.dts

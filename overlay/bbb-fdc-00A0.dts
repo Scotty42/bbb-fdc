@@ -1,0 +1,11 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "ti,beaglebone", "ti,beaglebone-black";
+
+    part-number = "bbb-fdc";
+    version = "00A0";
+    exclusive-use = 
+
+};
