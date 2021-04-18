@@ -1,9 +1,9 @@
-#include <Python.h>
-#include <wiringPi.h>
+#include <python3.7/Python.h>
 #include <unistd.h>
 #include <stdio.h>
 
 #include "micros.h"
+#include "wiringPi.h"
 
 #define RESULT_OKAY 0
 #define RESULT_TIMEOUT_EXEC 0x14

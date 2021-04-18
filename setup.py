@@ -1,3 +1,6 @@
+# Build 
+# python3 setup.py build
+
 import os
 import sys
 from setuptools import setup, Extension
