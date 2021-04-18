@@ -25,21 +25,28 @@ int main(void)
     check_root_user();
 
     iolib_init();
-    iolib_setdir(8, 12, DigitalOut);
-    iolib_setdir(8, 13, DigitalIn); 
+    //iolib_setdir(8, 12, DigitalOut);
+    //iolib_setdir(8, 13, DigitalIn); 
     //if (is_low(8, 13))  
+    BBBIO_sys_Enable_GPIO(BBBIO_GPIO0);
+    BBBIO_GPIO_set_dir(BBBIO_GPIO0, 
+        BBBIO_GPIO_PIN_31, 
+        BBBIO_GPIO_PIN_22);
     
-    printf("\nBlinking\n");
+    printf("\nToggling\n");
     while(not_finished)
     {
-        pin_high(8, 12);
+        //pin_high(8, 12);
         //iolib_delay_ms(500);
+        BBBIO_GPIO_high(BBBIO_GPIO0, BBBIO_GPIO_PIN_22);
         delayMicroseconds(500*1000);
-        pin_low(8, 12);
+
+        //pin_low(8, 12);
         //iolib_delay_ms(500);
+        BBBIO_GPIO_low(BBBIO_GPIO0, BBBIO_GPIO_PIN_22);
         delayMicroseconds(500*1000);
     }
-    printf("\nDone Blinking\n");
+    printf("\nDone Toggling\n");
     
     iolib_free();
 

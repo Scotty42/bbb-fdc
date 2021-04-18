@@ -285,6 +285,9 @@ class FDC:
     def initFDC(self):
         wd37c65_direct_ext.init()
 
+    def deinitFDC(self):
+        wd37c65_direct_ext.deinit()
+
     def writeDOR(self, dor):
         wd37c65_direct_ext.write_dor(dor)
         self.dor = dor

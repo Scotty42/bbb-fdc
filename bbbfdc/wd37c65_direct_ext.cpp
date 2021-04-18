@@ -1,8 +1,8 @@
 #include <python3.7/Python.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <iobb.h>
 
-#include "micros.h"
 #include "wiringPi.h"
 
 #define RESULT_OKAY 0
@@ -19,13 +19,15 @@
 #define REG_MSR 0
 #define REG_DATA 1
 
+//////////////////////////// DEFINE PINs /////////////////////////////
+
 #define CS_FDC 0
 #define CS_DOR 1
 #define CS_DCR 2
 
 #define WD_WR 6
 #define WD_RD 5
-#define WD_A0 12
+#define WD_A0     BBBIO_GPIO_PIN_22   // BBBIO_GPIO0
 #define WD_CS 13
 #define WD_DOR 19
 #define WD_CCR 16
@@ -34,24 +36,80 @@
 #define WD_RESET 21
 #define WD_DC 7
 
-const int WD_DATAPINS[] = { 17, 18, 27, 22, 23, 24, 25, 4 };
-const int WD_DATAPINS_REVERSED[] = { 4, 25, 24, 23, 22, 27, 18, 17 };
+const int WD_DATAPINS[] = { BBBIO_GPIO_PIN_12, BBBIO_GPIO_PIN_13, BBBIO_GPIO_PIN_14, BBBIO_GPIO_PIN_15, BBBIO_GPIO_PIN_16, BBBIO_GPIO_PIN_17, BBBIO_GPIO_PIN_18, BBBIO_GPIO_PIN_19 };           // BBBIO_GPIO1
+const int WD_DATAPINS_REVERSED[] = { BBBIO_GPIO_PIN_19, BBBIO_GPIO_PIN_18, BBBIO_GPIO_PIN_17, BBBIO_GPIO_PIN_16, BBBIO_GPIO_PIN_15, BBBIO_GPIO_PIN_14, BBBIO_GPIO_PIN_13, BBBIO_GPIO_PIN_12 };  // BBBIO_GPIO1
 
-int EnableMyMicros = FALSE;
+//////////////////////////// DEFINE PINs /////////////////////////////
 
-#define myDigitalWrite(x,y) digitalWrite(x,y)
-#define myDigitalRead(x) digitalRead(x)
-#define myPinModeInput(x) pinMode(x,INPUT)
-#define myPinModeOutput(x) pinMode(x,OUTPUT)
+//#define myDigitalWrite(x,y) digitalWrite(x,y)
+//#define myDigitalRead(x) digitalRead(x)
+//#define myPinModeInput(x) pinMode(x,INPUT)
+//#define myPinModeOutput(x) pinMode(x,OUTPUT)
+
+void check_root_user(void)
+{
+    if(geteuid()!=0)
+        fprintf(stderr, "Run as root user! (or use sudo)\n");
+}
 
 void myDelayMicroseconds(int x)
 {
-  if (EnableMyMicros) {
-    delayMicros(x);
-  } else {
-    // wiringpi
-    delayMicroseconds(x);
-  }
+  // use pseudo wiringPi adapted to BBB
+  delayMicroseconds(x);
+}
+
+void wd_deinit(void) 
+{
+  iolib_free();
+  fprintf(stdout, "GPIO DeInit\n");
+}
+
+void wd_init(void)
+{
+  unsigned int i;
+
+  check_root_user();
+  iolib_init();
+  fprintf(stdout, "GPIO Init\n");
+
+  BBBIO_sys_Enable_GPIO(BBBIO_GPIO0);
+  BBBIO_GPIO_set_dir(BBBIO_GPIO0, 
+    BBBIO_GPIO_PIN_0,     // input
+    BBBIO_GPIO_PIN_22);   // output, default pulldown
+
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_A0);
+  
+  myDigitalWrite(WD_CS, 1);
+  myDigitalWrite(WD_DOR, 1);
+  myDigitalWrite(WD_CCR, 1);
+  myDigitalWrite(WD_RD, 1);
+  myDigitalWrite(WD_WR, 1);
+  myDigitalWrite(WD_RESET, 0); // start with reset deasserted
+  myDigitalWrite(WD_TC, 1);
+  myDigitalWrite(WD_DACK, 1);
+
+  myPinModeOutput(WD_CS);
+  myPinModeOutput(WD_DOR);
+  myPinModeOutput(WD_CCR);
+  myPinModeOutput(WD_RD);
+  myPinModeOutput(WD_WR);
+  myPinModeOutput(WD_RESET);
+  myPinModeOutput(WD_TC);
+  myPinModeOutput(WD_DACK);
+
+  // data port pins
+  // default OCP pinmux behavior in mode 7 := pulldown
+  BBBIO_sys_Enable_GPIO(BBBIO_GPIO1);
+  BBBIO_GPIO_set_dir(BBBIO_GPIO1, 
+    BBBIO_GPIO_PIN_0, 
+    BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19);
+
+  // reset WDC
+  myDelayMicroseconds(10);
+  myDigitalWrite(WD_RESET, 1); // assert reset
+  myDelayMicroseconds(100);
+  myDigitalWrite(WD_RESET, 0); // deassert reset
+  myDelayMicroseconds(1000);
 }
 
 void wd_config_input(void)
@@ -274,40 +332,6 @@ unsigned int wd_drain(void)
   return RESULT_OVER_DRAIN;
 }
 
-void wd_init(void)
-{
-  unsigned int i;
-
-  myDigitalWrite(WD_A0, 1);
-  myDigitalWrite(WD_CS, 1);
-  myDigitalWrite(WD_DOR, 1);
-  myDigitalWrite(WD_CCR, 1);
-  myDigitalWrite(WD_RD, 1);
-  myDigitalWrite(WD_WR, 1);
-  myDigitalWrite(WD_RESET, 0); // start with reset deasserted
-  myDigitalWrite(WD_TC, 1);
-  myDigitalWrite(WD_DACK, 1);
-  myPinModeOutput(WD_A0);
-  myPinModeOutput(WD_CS);
-  myPinModeOutput(WD_DOR);
-  myPinModeOutput(WD_CCR);
-  myPinModeOutput(WD_RD);
-  myPinModeOutput(WD_WR);
-  myPinModeOutput(WD_RESET);
-  myPinModeOutput(WD_TC);
-  myPinModeOutput(WD_DACK);
-
-  for (i=0; i<8; i++) {
-    pullUpDnControl(WD_DATAPINS[i], PUD_DOWN);
-  }
-
-  myDelayMicroseconds(10);
-  myDigitalWrite(WD_RESET, 1); // assert reset
-  myDelayMicroseconds(100);
-  myDigitalWrite(WD_RESET, 0); // deassert reset
-  myDelayMicroseconds(1000);
-}
-
 void wd_reset(unsigned int dor)
 {
     int i;
@@ -341,12 +365,23 @@ void short_delay(void)
     }
 }
 
+///////////////////////////////////////// Python Wrapper definitions /////////////////////////////////////////////
+
 static PyObject *wd_direct_init(PyObject *self, PyObject *args)
 {
   if (!PyArg_ParseTuple(args, "")) {
     return NULL;
   }
   wd_init();
+  return Py_BuildValue("");
+}
+
+static PyObject *wd_direct_deinit(PyObject *self, PyObject *args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  wd_deinit();
   return Py_BuildValue("");
 }
 
@@ -643,6 +678,7 @@ static PyObject *wd_direct_enable_my_delay_micros(PyObject *self, PyObject *args
 
 static PyMethodDef wd_direct_methods[] = {
   {"init", wd_direct_init, METH_VARARGS, "Initialize"},
+  {"deinit", wd_direct_deinit, METH_VARARGS, "Deinitialize"},
   {"reset", wd_direct_reset, METH_VARARGS, "Reset"},
   {"pulse_dack", wd_direct_pulse_dack, METH_VARARGS, "Pulse Dack"},
   {"get_tc", wd_direct_get_tc, METH_VARARGS, "Get TC"},
@@ -660,15 +696,13 @@ static PyMethodDef wd_direct_methods[] = {
   {"get_msr", wd_direct_get_msr, METH_VARARGS, "get the msr"},
   {"wait_msr", wd_direct_wait_msr, METH_VARARGS, "wait for msr"},
   {"delay_microseconds", wd_direct_delay_microseconds, METH_VARARGS, "delay microseconds"},
-  {"enable_my_delay_micros", wd_direct_enable_my_delay_micros, METH_VARARGS, "enable my delay_micros function"},
   {"drain", wd_direct_drain, METH_VARARGS, "drain data"},
   {NULL, NULL, 0, NULL}
 };
 
 PyMODINIT_FUNC initwd37c65_direct_ext(void)
 {
-  EnableMyMicros = FALSE;
-  wiringPiSetupGpio();
+  //wiringPiSetupGpio();
 
   (void) Py_InitModule("wd37c65_direct_ext", wd_direct_methods);
 }

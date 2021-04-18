@@ -183,6 +183,7 @@ def main():
             format(fdc, scope)
     finally:
         fdc.done()
+        fdc.deinit()
 
 if __name__ == "__main__":
     main()
