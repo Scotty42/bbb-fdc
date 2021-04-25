@@ -25,26 +25,21 @@
 #define CS_DOR 1
 #define CS_DCR 2
 
-#define WD_WR 6
-#define WD_RD 5
-#define WD_A0     BBBIO_GPIO_PIN_22   // BBBIO_GPIO0
-#define WD_CS 13
-#define WD_DOR 19
-#define WD_CCR 16
-#define WD_DACK 26
-#define WD_TC 20
-#define WD_RESET 21
-#define WD_DC 7
+#define WD_WR     BBBIO_GPIO_PIN_31   //  BBBIO_GPIO0
+#define WD_RD     BBBIO_GPIO_PIN_30   //  BBBIO_GPIO0
+#define WD_A0     BBBIO_GPIO_PIN_22   //  BBBIO_GPIO0
+#define WD_CS     BBBIO_GPIO_PIN_2    //  BBBIO_GPIO0
+#define WD_DOR    BBBIO_GPIO_PIN_3    //  BBBIO_GPIO0
+#define WD_CCR    BBBIO_GPIO_PIN_4    //  BBBIO_GPIO0
+#define WD_DACK   BBBIO_GPIO_PIN_5    //  BBBIO_GPIO0
+#define WD_TC     BBBIO_GPIO_PIN_23   //  BBBIO_GPIO0
+#define WD_RESET  BBBIO_GPIO_PIN_1    //  BBBIO_GPIO2
+#define WD_DC     BBBIO_GPIO_PIN_7    //  BBBIO_GPIO0
 
 const int WD_DATAPINS[] = { BBBIO_GPIO_PIN_12, BBBIO_GPIO_PIN_13, BBBIO_GPIO_PIN_14, BBBIO_GPIO_PIN_15, BBBIO_GPIO_PIN_16, BBBIO_GPIO_PIN_17, BBBIO_GPIO_PIN_18, BBBIO_GPIO_PIN_19 };           // BBBIO_GPIO1
 const int WD_DATAPINS_REVERSED[] = { BBBIO_GPIO_PIN_19, BBBIO_GPIO_PIN_18, BBBIO_GPIO_PIN_17, BBBIO_GPIO_PIN_16, BBBIO_GPIO_PIN_15, BBBIO_GPIO_PIN_14, BBBIO_GPIO_PIN_13, BBBIO_GPIO_PIN_12 };  // BBBIO_GPIO1
 
 //////////////////////////// DEFINE PINs /////////////////////////////
-
-//#define myDigitalWrite(x,y) digitalWrite(x,y)
-//#define myDigitalRead(x) digitalRead(x)
-//#define myPinModeInput(x) pinMode(x,INPUT)
-//#define myPinModeOutput(x) pinMode(x,OUTPUT)
 
 void check_root_user(void)
 {
@@ -66,36 +61,30 @@ void wd_deinit(void)
 
 void wd_init(void)
 {
-  unsigned int i;
-
   check_root_user();
   iolib_init();
   fprintf(stdout, "GPIO Init\n");
 
   BBBIO_sys_Enable_GPIO(BBBIO_GPIO0);
   BBBIO_GPIO_set_dir(BBBIO_GPIO0, 
-    BBBIO_GPIO_PIN_0,     // input
-    BBBIO_GPIO_PIN_22);   // output, default pulldown
+    BBBIO_GPIO_PIN_0 | BBBIO_GPIO_PIN_7,     // input
+    BBBIO_GPIO_PIN_22 | BBBIO_GPIO_PIN_30 | BBBIO_GPIO_PIN_31 | BBBIO_GPIO_PIN_2 | BBBIO_GPIO_PIN_3 | BBBIO_GPIO_PIN_4 | BBBIO_GPIO_PIN_5 | BBBIO_GPIO_PIN_23 );   // output, default pulldown/pulldown in OCP mode 7
 
   BBBIO_GPIO_high(BBBIO_GPIO0, WD_A0);
-  
-  myDigitalWrite(WD_CS, 1);
-  myDigitalWrite(WD_DOR, 1);
-  myDigitalWrite(WD_CCR, 1);
-  myDigitalWrite(WD_RD, 1);
-  myDigitalWrite(WD_WR, 1);
-  myDigitalWrite(WD_RESET, 0); // start with reset deasserted
-  myDigitalWrite(WD_TC, 1);
-  myDigitalWrite(WD_DACK, 1);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_RD);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_WR);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_CS);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_DOR);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_CCR);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_DACK);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_TC);
 
-  myPinModeOutput(WD_CS);
-  myPinModeOutput(WD_DOR);
-  myPinModeOutput(WD_CCR);
-  myPinModeOutput(WD_RD);
-  myPinModeOutput(WD_WR);
-  myPinModeOutput(WD_RESET);
-  myPinModeOutput(WD_TC);
-  myPinModeOutput(WD_DACK);
+  BBBIO_sys_Enable_GPIO(BBBIO_GPIO2);
+  BBBIO_GPIO_set_dir(BBBIO_GPIO2, 
+    BBBIO_GPIO_PIN_0,     // input
+    BBBIO_GPIO_PIN_1 );   // output, default pulldown/pulldown in OCP mode 7
+
+  BBBIO_GPIO_low(BBBIO_GPIO2, WD_RESET);
 
   // data port pins
   // default OCP pinmux behavior in mode 7 := pulldown
@@ -106,88 +95,115 @@ void wd_init(void)
 
   // reset WDC
   myDelayMicroseconds(10);
-  myDigitalWrite(WD_RESET, 1); // assert reset
+  BBBIO_GPIO_high(BBBIO_GPIO2, WD_RESET);  // assert reset
   myDelayMicroseconds(100);
-  myDigitalWrite(WD_RESET, 0); // deassert reset
+  BBBIO_GPIO_low(BBBIO_GPIO2, WD_RESET);   // deassert reset
   myDelayMicroseconds(1000);
 }
 
 void wd_config_input(void)
 {
-  int i;
-  for (i=0; i<8; i++) {
-    myPinModeInput(WD_DATAPINS[i]);
-  }
+  BBBIO_GPIO_set_dir(BBBIO_GPIO1, 
+    BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19,
+    BBBIO_GPIO_PIN_0);
 }
 
 void wd_config_output(void)
 {
-  int i;
-  for (i=0; i<8; i++) {
-    myPinModeOutput(WD_DATAPINS[i]);
-  }
+  BBBIO_GPIO_set_dir(BBBIO_GPIO1, 
+    BBBIO_GPIO_PIN_0, 
+    BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19);
 }
 
 void wd_set_addr(unsigned int addr)
 {
-  myDigitalWrite(WD_A0, addr);
+  addr == 1 ? BBBIO_GPIO_high(BBBIO_GPIO0, WD_A0) : BBBIO_GPIO_low(BBBIO_GPIO0, WD_A0);
 }
 
 void wd_set_rd(unsigned int value)
 {
-  myDigitalWrite(WD_RD,value);
+  value == 1 ? BBBIO_GPIO_high(BBBIO_GPIO0, WD_RD) : BBBIO_GPIO_low(BBBIO_GPIO0, WD_RD);
 }
 
 void wd_set_wr(unsigned int value)
 {
-  myDigitalWrite(WD_WR,value);
+  value == 1 ? BBBIO_GPIO_high(BBBIO_GPIO0, WD_WR) : BBBIO_GPIO_low(BBBIO_GPIO0, WD_WR);
 }
 
 void wd_set_cs(unsigned int cs, unsigned int value)
 {
   switch(cs) {
     case CS_FDC:
-      myDigitalWrite(WD_CS, value);
+      value == 1 ? BBBIO_GPIO_high(BBBIO_GPIO0, WD_CS) : BBBIO_GPIO_low(BBBIO_GPIO0, WD_CS);
       break;
 
     case CS_DOR:
-      myDigitalWrite(WD_DOR, value);
+      value == 1 ? BBBIO_GPIO_high(BBBIO_GPIO0, WD_DOR): BBBIO_GPIO_low(BBBIO_GPIO0, WD_DOR);
       break;
 
     case CS_DCR:
-      myDigitalWrite(WD_CCR, value);
+      value == 1 ? BBBIO_GPIO_high(BBBIO_GPIO0, WD_CCR) : BBBIO_GPIO_low(BBBIO_GPIO0, WD_CCR);
       break;
   }
 }
 
 void wd_set_data(unsigned int data)
 {
-  int i;
+  /*int i;
   for (i=0; i<8; i++) {
     myDigitalWrite(WD_DATAPINS[i], data & 0x01);
     data = data >> 1;
-  }
+  }*/
+
+  // D0..D7
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_12) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_12);
+  data = data >> 1;
+
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_13) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_13);
+  data = data >> 1;
+
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_14) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_14);
+  data = data >> 1;
+
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_15) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_15);
+  data = data >> 1;
+
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_16) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_16);
+  data = data >> 1;
+
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_17) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_17);
+  data = data >> 1;
+
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_18) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_18);
+  data = data >> 1;
+
+  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_19) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_19);
 }
 
 unsigned int wd_get_data(void)
 {
-  int i;
   int data = 0;
+  /*int i;
+  
   for (i=0; i<8; i++) {
     data = data << 1;
     data = data | myDigitalRead(WD_DATAPINS_REVERSED[i]);
-  }
+  }*/
+
+  // D0..D7
+  data = BBBIO_GPIO_get(BBBIO_GPIO1, BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19);
+
   return data;
 }
 
 unsigned int wd_get_tc(void)
 {
-  return myDigitalRead(WD_TC);  // XXX this is an output not an input...
+  return BBBIO_GPIO_get(BBBIO_GPIO0, WD_TC);  // XXX this is an output not an input ???
 }
 
 unsigned int wd_get_dc(void)
 {
-  return myDigitalRead(WD_DC);
+  return BBBIO_GPIO_get(BBBIO_GPIO0, WD_DC);
 }
 
 void wd_pulse_cs_wr(unsigned int cs)
@@ -349,9 +365,9 @@ void wd_reset(unsigned int dor)
 
 void wd_pulse_dack(void)
 {
-  myDigitalWrite(WD_DACK, 0);
+  BBBIO_GPIO_low(BBBIO_GPIO0, WD_DACK);
   myDelayMicroseconds(1);
-  myDigitalWrite(WD_DACK, 1);
+  BBBIO_GPIO_high(BBBIO_GPIO0, WD_DACK);
 }
 
 void short_delay(void)
@@ -671,8 +687,10 @@ static PyObject *wd_direct_enable_my_delay_micros(PyObject *self, PyObject *args
   if (!PyArg_ParseTuple(args, "")) {
     return NULL;
   }
+  /*
   initMicros();
   EnableMyMicros = TRUE;
+  */
   return Py_BuildValue("i", 0);
 }
 
@@ -700,9 +718,16 @@ static PyMethodDef wd_direct_methods[] = {
   {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC initwd37c65_direct_ext(void)
+static struct PyModuleDef wd37c65_direct_ext =
 {
-  //wiringPiSetupGpio();
+    PyModuleDef_HEAD_INIT,
+    "wd37c65_direct_ext",   // name of module 
+    "",                     // module documentation, may be NULL 
+    -1,                     // size of per-interpreter state of the module, or -1 if the module keeps state in global variables. 
+    wd_direct_methods
+};
 
-  (void) Py_InitModule("wd37c65_direct_ext", wd_direct_methods);
+PyMODINIT_FUNC PyInit_wd37c65_direct_ext(void)
+{
+    return PyModule_Create(&wd37c65_direct_ext);
 }
