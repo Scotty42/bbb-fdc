@@ -6,6 +6,18 @@
 #include <iobb.h>
 #include "../bbbfdc/wiringPi.h"
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0') 
+
+
 int not_finished = 1;
 
 
@@ -59,18 +71,32 @@ int main(void)
     printf("\nTest\n");
     srand (time(NULL));
 
-    //wd_config_input();
-    wd_config_output();
-    
+    wd_config_input();
+    //wd_config_output();
+
+    BBBIO_sys_Enable_GPIO(BBBIO_GPIO0);
+    BBBIO_GPIO_set_dir(BBBIO_GPIO0, 
+      BBBIO_GPIO_PIN_0 | BBBIO_GPIO_PIN_7,     // input
+      BBBIO_GPIO_PIN_22 | BBBIO_GPIO_PIN_30 | BBBIO_GPIO_PIN_31 | BBBIO_GPIO_PIN_2 | BBBIO_GPIO_PIN_3 | BBBIO_GPIO_PIN_4 | BBBIO_GPIO_PIN_5 | BBBIO_GPIO_PIN_23 );   // output, default pulldown/pulldown in OCP mode 7
+
+    // MSR config
+    BBBIO_GPIO_low(BBBIO_GPIO0, BBBIO_GPIO_PIN_22);
+    BBBIO_GPIO_low(BBBIO_GPIO0, BBBIO_GPIO_PIN_30);
+    BBBIO_GPIO_high(BBBIO_GPIO0, BBBIO_GPIO_PIN_31);
+
+
     unsigned int r = 0;
     while(not_finished)
     {
-        r = rand() % 254 + 1;
-        wd_set_data(r);
-	      fprintf(stdout, "%02x\n", r);
+        //r = rand() % 254 + 1;
+        //wd_set_data(r);
+	//fprintf(stdout, "%02x\n", r);
         
-        //r = wd_get_data();
-        //fprintf(stdout, "%02x\n", r);
+        r = wd_get_data();
+	int m = r;
+	printf(" " BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(m));
+        fprintf(stdout, " %02x", r);
+	printf(" => %02x\n", (m & 0xF0));
 
         delayMicroseconds(2000*1000);
     }

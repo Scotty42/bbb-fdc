@@ -6,8 +6,8 @@ import string
 import sys
 import time
 from bbbfdc.fdc import FDC
-from bbbfdc import realtime_ext
-from bbbfdc import wd37c65_direct_ext
+# from bbbfdc import wd37c65_direct_ext
+import wd37c65_direct_ext
 
 SCOPE_SECTOR = 0
 SCOPE_TRACK = 1
@@ -27,7 +27,7 @@ def test(fdc):
 def test2(fdc):
     if fdc.cyl==0:
         print("Switching to cylinder 1", file=sys.stderr)
-        fdc.cyl=1;
+        fdc.cyl=1
 
     success = 0
     fail = 0
@@ -130,9 +130,9 @@ def format(fdc, scope):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--realtime', '-r', default=False, action='store_true', help='realtime scheduling')
-    parser.add_argument("--pincpu", "-p", type=int, default=None, help="pin to cpu")
-    parser.add_argument('--mymicros', default=False, action='store_true', help='use our own delayMirosecond function')
+    # parser.add_argument('--realtime', '-r', default=False, action='store_true', help='realtime scheduling')
+    # parser.add_argument("--pincpu", "-p", type=int, default=None, help="pin to cpu")
+    # parser.add_argument('--mymicros', default=False, action='store_true', help='use our own delayMirosecond function')
     parser.add_argument('--verbose', '-v', action='count', default=0)
     parser.add_argument("--media", "-m", type=str, default="pc144", help="disk media [pc144|pc720|pc360|pc120|pc111]")
     parser.add_argument("--cyl", "-C", type=int, default=0, help="cylinder, default=0")
@@ -143,14 +143,14 @@ def main():
     parser.add_argument("args", nargs="*", help="arguments to command")
     args = parser.parse_args(sys.argv[1:])
 
-    if args.realtime:
-        realtime_ext.realTimeSched()
+    # if args.realtime:
+    #    realtime_ext.realTimeSched()
 
-    if args.pincpu:
-        realtime_ext.pinCPU(args.pincpu)
+    # if args.pincpu:
+    #    realtime_ext.pinCPU(args.pincpu)
 
-    if args.mymicros:
-        wd37c65_direct_ext.enable_my_delay_micros()
+    # if args.mymicros:
+    #    wd37c65_direct_ext.enable_my_delay_micros()
 
     fdc = FDC(verbose=(args.verbose>0), media=args.media)
     fdc.init()
@@ -183,7 +183,8 @@ def main():
             format(fdc, scope)
     finally:
         fdc.done()
-        fdc.deinit()
+        # free BBBio ressources
+        fdc.deinitFDC()
 
 if __name__ == "__main__":
     main()

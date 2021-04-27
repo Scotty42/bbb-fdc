@@ -36,8 +36,8 @@
 #define WD_RESET  BBBIO_GPIO_PIN_1    //  BBBIO_GPIO2
 #define WD_DC     BBBIO_GPIO_PIN_7    //  BBBIO_GPIO0
 
-const int WD_DATAPINS[] = { BBBIO_GPIO_PIN_12, BBBIO_GPIO_PIN_13, BBBIO_GPIO_PIN_14, BBBIO_GPIO_PIN_15, BBBIO_GPIO_PIN_16, BBBIO_GPIO_PIN_17, BBBIO_GPIO_PIN_18, BBBIO_GPIO_PIN_19 };           // BBBIO_GPIO1
-const int WD_DATAPINS_REVERSED[] = { BBBIO_GPIO_PIN_19, BBBIO_GPIO_PIN_18, BBBIO_GPIO_PIN_17, BBBIO_GPIO_PIN_16, BBBIO_GPIO_PIN_15, BBBIO_GPIO_PIN_14, BBBIO_GPIO_PIN_13, BBBIO_GPIO_PIN_12 };  // BBBIO_GPIO1
+const int WD_DATAPINS[] = {BBBIO_GPIO_PIN_12 , BBBIO_GPIO_PIN_13 , BBBIO_GPIO_PIN_14 , BBBIO_GPIO_PIN_15 , BBBIO_GPIO_PIN_16 , BBBIO_GPIO_PIN_17 , BBBIO_GPIO_PIN_18 , BBBIO_GPIO_PIN_19};  // BBBIO_GPIO1
+const int WD_DATAPINS_REVERSED[]  = {BBBIO_GPIO_PIN_19 , BBBIO_GPIO_PIN_18 , BBBIO_GPIO_PIN_17 , BBBIO_GPIO_PIN_16 , BBBIO_GPIO_PIN_15 , BBBIO_GPIO_PIN_14 , BBBIO_GPIO_PIN_13 , BBBIO_GPIO_PIN_12};   // BBBIO_GPIO1
 
 //////////////////////////// DEFINE PINs /////////////////////////////
 
@@ -55,6 +55,10 @@ void myDelayMicroseconds(int x)
 
 void wd_deinit(void) 
 {
+  BBBIO_sys_Disable_GPIO(BBBIO_GPIO0);
+  BBBIO_sys_Disable_GPIO(BBBIO_GPIO1);
+  BBBIO_sys_Disable_GPIO(BBBIO_GPIO2);
+
   iolib_free();
   fprintf(stdout, "GPIO DeInit\n");
 }
@@ -94,25 +98,34 @@ void wd_init(void)
     BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19);
 
   // reset WDC
+  fprintf(stdout, "WD reset\n");
   myDelayMicroseconds(10);
   BBBIO_GPIO_high(BBBIO_GPIO2, WD_RESET);  // assert reset
   myDelayMicroseconds(100);
   BBBIO_GPIO_low(BBBIO_GPIO2, WD_RESET);   // deassert reset
   myDelayMicroseconds(1000);
+
+  fprintf(stdout, "GPIO Init done\n");
 }
 
 void wd_config_input(void)
 {
+  //BBBIO_sys_Disable_GPIO(BBBIO_GPIO1);
+
   BBBIO_GPIO_set_dir(BBBIO_GPIO1, 
     BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19,
     BBBIO_GPIO_PIN_0);
+  //fprintf(stdout, "wd_config_input\n");
 }
 
 void wd_config_output(void)
 {
+  //BBBIO_sys_Disable_GPIO(BBBIO_GPIO1);
+
   BBBIO_GPIO_set_dir(BBBIO_GPIO1, 
     BBBIO_GPIO_PIN_0, 
     BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19);
+  //fprintf(stdout, "wd_config_output\n");
 }
 
 void wd_set_addr(unsigned int addr)
@@ -149,49 +162,19 @@ void wd_set_cs(unsigned int cs, unsigned int value)
 
 void wd_set_data(unsigned int data)
 {
-  /*int i;
-  for (i=0; i<8; i++) {
-    myDigitalWrite(WD_DATAPINS[i], data & 0x01);
+  for (int n=0; n<8; n++) {
+    (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, WD_DATAPINS[n]) : BBBIO_GPIO_low(BBBIO_GPIO1, WD_DATAPINS[n]);
     data = data >> 1;
-  }*/
-
-  // D0..D7
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_12) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_12);
-  data = data >> 1;
-
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_13) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_13);
-  data = data >> 1;
-
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_14) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_14);
-  data = data >> 1;
-
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_15) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_15);
-  data = data >> 1;
-
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_16) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_16);
-  data = data >> 1;
-
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_17) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_17);
-  data = data >> 1;
-
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_18) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_18);
-  data = data >> 1;
-
-  (data & 0x01) == 1 ? BBBIO_GPIO_high(BBBIO_GPIO1, BBBIO_GPIO_PIN_19) : BBBIO_GPIO_low(BBBIO_GPIO1, BBBIO_GPIO_PIN_19);
+  }
 }
 
 unsigned int wd_get_data(void)
 {
-  int data = 0;
-  /*int i;
-  
-  for (i=0; i<8; i++) {
-    data = data << 1;
-    data = data | myDigitalRead(WD_DATAPINS_REVERSED[i]);
-  }*/
-
-  // D0..D7
-  data = BBBIO_GPIO_get(BBBIO_GPIO1, BBBIO_GPIO_PIN_12 | BBBIO_GPIO_PIN_13 | BBBIO_GPIO_PIN_14 | BBBIO_GPIO_PIN_15 | BBBIO_GPIO_PIN_16 | BBBIO_GPIO_PIN_17 | BBBIO_GPIO_PIN_18 | BBBIO_GPIO_PIN_19);
+  unsigned int data = 0;
+  for (int n = 7; n >= 0; n--) {
+    int bit = BBBIO_GPIO_get(BBBIO_GPIO1, WD_DATAPINS[n]) ? 1 : 0;
+    data = (data << 1) + bit;
+  }
 
   return data;
 }
@@ -311,6 +294,7 @@ unsigned int wd_wait_msr(unsigned int mask, unsigned int val)
       myDelayMicroseconds(3);
 
       msr = wd_read_msr();
+      //fprintf(stdout, "waitmsr (msr & mask): 0%02X\n", msr);
       if ((msr & mask) == val) {
         return 0;
       }
@@ -558,7 +542,7 @@ static PyObject *wd_direct_read_result(PyObject *self, PyObject *args)
       myDelayMicroseconds(10);      
       
       msr = wd_read_msr();
-      //fprintf(stderr, "readRes msr %2X\n", msr);
+      fprintf(stderr, "readRes msr %2X\n", msr);
       if ((msr & 0xF0) == 0xD0) {
           // RQM=1, DIO=1, BUSY=1 ... byte is ready to read
           buf[count] = wd_read_data();

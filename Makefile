@@ -1,5 +1,5 @@
 CXX		  := arm-linux-gnueabihf-g++
-CXX_FLAGS := -Wall -Wextra -std=c++17 -ggdb
+CXX_FLAGS := -Wall -Wextra -std=c++17 -ggdb -fPIC
 
 BIN		:= test
 SRC		:= bbbfdc

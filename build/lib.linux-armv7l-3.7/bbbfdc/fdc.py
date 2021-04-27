@@ -14,6 +14,7 @@ import time
 
 import wd37c65_direct_ext
 
+
 FDM720 = 0
 FDM144 = 1
 FDM360 = 2
@@ -273,6 +274,7 @@ class FDC:
 
     def readResult(self):
         status, blk = wd37c65_direct_ext.read_result()
+        # print("*** readResult %02X" % blk, file=sys.stdout)
         if status != 0:
             raise FDCException(status)
 
@@ -284,6 +286,9 @@ class FDC:
 
     def initFDC(self):
         wd37c65_direct_ext.init()
+
+    def deinitFDC(self):
+        wd37c65_direct_ext.deinit()
 
     def writeDOR(self, dor):
         wd37c65_direct_ext.write_dor(dor)
@@ -306,6 +311,9 @@ class FDC:
 
     def done(self):
         self._motorOff()
+
+    def deinit(self):
+        wd37c65_direct_ext.deinit()
 
     def _reset(self):
         self.resetFDC()
@@ -550,7 +558,7 @@ class FDC:
                 frbBytes.append("%02X" % ord(self.frb[i]))
             self.log("-> [result %02X] %s" % (result, (" ".join(frbBytes))))
             return result
-        except FDCException, e:
+        except FDCException as e:
             print("Exception in _Fop %s, code %2X" % (e, e.fstRC), file=sys.stderr)
             self.fstRC = e.fstRC
             return self.fstRC
@@ -566,7 +574,7 @@ class FDC:
         if (self.get_msr() & 0x90) == 0x90:
             # Idiot-Check, this should never happen.
             print("Holy Corrupted Floppy Drivers, Batman! We're in the middle of a read or write already!\n", file=sys.stderr)
-            self.fdcReady = False;
+            self.fdcReady = False
             self.fstRC = FRC_INPROGRESS
             return self.fstRC
 
