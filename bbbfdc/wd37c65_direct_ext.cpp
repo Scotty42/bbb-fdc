@@ -550,6 +550,7 @@ static PyObject *wd_direct_read_result(PyObject *self, PyObject *args)
           maxTime = 10000;
       } else if ((msr & 0xF0) == 0x80) {
           // RQM=1, DIO=0, BUSY=0 ... fdc is waiting for next command ... we are done
+          fprintf(stderr, "readRes data %s\n", buf);
           return Py_BuildValue("is#", 0, buf, count);
       } else {
          maxTime--;

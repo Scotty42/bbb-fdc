@@ -274,7 +274,6 @@ class FDC:
 
     def readResult(self):
         status, blk = wd37c65_direct_ext.read_result()
-        # print("*** readResult %02X" % blk, file=sys.stdout)
         if status != 0:
             raise FDCException(status)
 
