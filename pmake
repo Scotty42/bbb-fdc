@@ -1,0 +1,6 @@
+#!/bin/sh
+
+sudo python setup.py clean
+sudo python setup.py install
+
+sudo cp /usr/local/lib/python2.7/dist-packages/bbbfdc/wd37c65_direct_ext.so /usr/local/lib/python2.7/dist-packages/wd37c65_direct_ext.so
