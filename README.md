@@ -21,7 +21,7 @@ markus@beaglebone:~/rt-tests$ sudo ./cyclictest -m -S 95
 [sudo] password for markus:
 # /dev/cpu_dma_latency set to 0us
 policy: other/other: loadavg: 4.89 1.91 0.69 1/97 2480
-T: 0 ( 2480) P: 0 I:1000 C:  12854 Min:     95 Act:  104 Avg:  197 Max:    4384```
+T: 0 ( 2480) P: 0 I:1000 C:  12854 Min:     95 Act:  104 Avg:  197 Max:    4384´´´
 
 
 Not to forget the amazing BBBio_lib that allows port access to a number of initialized pins. So reading and writing bytes to a (data) port does not get any easier. And in contrast to wiringPi, pin numbering scheme is not counter intuitive.
@@ -42,7 +42,7 @@ libiobb.so : ${LIB_PATH}BBBiolib.c ${LIB_PATH}BBBiolib.h BBBiolib_PWMSS.o BBBiol
 	cp ${LIB_PATH}i2cfunc.h ./
 install :
 	#cp ${LIB_PATH}libiobb.a /usr/local/lib
-	cp ${LIB_PATH}libiobb.so /usr/local/lib```
+	cp ${LIB_PATH}libiobb.so /usr/local/lib´´´
 
 
 !(images/bbb-fdc.jpg)
