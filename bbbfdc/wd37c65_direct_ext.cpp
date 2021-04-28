@@ -1,4 +1,4 @@
-#include <python3.7/Python.h>
+#include <python2.7/Python.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <iobb.h>
@@ -542,7 +542,7 @@ static PyObject *wd_direct_read_result(PyObject *self, PyObject *args)
       myDelayMicroseconds(10);      
       
       msr = wd_read_msr();
-      fprintf(stderr, "readRes msr %2X\n", msr);
+      // fprintf(stderr, "readRes msr %2X\n", msr);
       if ((msr & 0xF0) == 0xD0) {
           // RQM=1, DIO=1, BUSY=1 ... byte is ready to read
           buf[count] = wd_read_data();
@@ -550,7 +550,7 @@ static PyObject *wd_direct_read_result(PyObject *self, PyObject *args)
           maxTime = 10000;
       } else if ((msr & 0xF0) == 0x80) {
           // RQM=1, DIO=0, BUSY=0 ... fdc is waiting for next command ... we are done
-          fprintf(stderr, "readRes data %s\n", buf);
+          // fprintf(stderr, "readRes data %s\n", buf);
           return Py_BuildValue("is#", 0, buf, count);
       } else {
          maxTime--;
@@ -702,7 +702,7 @@ static PyMethodDef wd_direct_methods[] = {
   {"drain", wd_direct_drain, METH_VARARGS, "drain data"},
   {NULL, NULL, 0, NULL}
 };
-
+/*
 static struct PyModuleDef wd37c65_direct_ext =
 {
     PyModuleDef_HEAD_INIT,
@@ -715,4 +715,9 @@ static struct PyModuleDef wd37c65_direct_ext =
 PyMODINIT_FUNC PyInit_wd37c65_direct_ext(void)
 {
     return PyModule_Create(&wd37c65_direct_ext);
+}
+*/
+PyMODINIT_FUNC initwd37c65_direct_ext(void)
+{
+  (void) Py_InitModule("wd37c65_direct_ext", wd_direct_methods);
 }

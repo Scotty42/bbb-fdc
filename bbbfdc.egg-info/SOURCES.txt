@@ -1,0 +1,12 @@
+README.md
+setup.py
+bbbfdc/__init__.py
+bbbfdc/fdc.py
+bbbfdc/micros.cpp
+bbbfdc/version.py
+bbbfdc/wd37c65_direct_ext.cpp
+bbbfdc.egg-info/PKG-INFO
+bbbfdc.egg-info/SOURCES.txt
+bbbfdc.egg-info/dependency_links.txt
+bbbfdc.egg-info/not-zip-safe
+bbbfdc.egg-info/top_level.txt
